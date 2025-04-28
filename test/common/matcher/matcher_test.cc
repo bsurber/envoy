@@ -107,7 +107,7 @@ MATCHER(HasSubMatcher, "") {
   return true;
 }
 
-MATCHER_P(MaybeHasStringAction, m, "") {
+MATCHER_P(HasResult, m, "") {
   // Accepts a MaybeMatchResult argument.
   if (arg.match_state_ != MatchState::MatchComplete) {
     *result_listener << "match_state_ is not MatchComplete";
@@ -117,10 +117,10 @@ MATCHER_P(MaybeHasStringAction, m, "") {
     *result_listener << "result_ is null";
     return false;
   }
-  return ExplainMatchResult(IsStringAction(m), arg.result_, result_listener);
+  return ExplainMatchResult(m, arg.result_, result_listener);
 }
 
-MATCHER(MaybeHasNoMatch, "") {
+MATCHER(HasNoMatchResult, "") {
   // Accepts a MaybeMatchResult argument.
   if (arg.match_state_ != MatchState::MatchComplete) {
     *result_listener << "match_state_ is not MatchComplete";
@@ -133,7 +133,7 @@ MATCHER(MaybeHasNoMatch, "") {
   return true;
 }
 
-MATCHER(MaybeFailedMatch, "") {
+MATCHER(HasFailureResult, "") {
   // Accepts a MaybeMatchResult argument.
   if (arg.match_state_ != MatchState::UnableToMatch) {
     *result_listener << "match_state_ is not UnableToMatch";
@@ -192,7 +192,7 @@ matcher_tree:
   auto match_tree = factory_.create(matcher);
 
   MaybeMatchResult result = evaluateMatch(*match_tree(), TestData());
-  EXPECT_THAT(result, MaybeHasStringAction("expected!"));
+  EXPECT_THAT(result, HasResult(IsStringAction("expected!")));
 }
 
 TEST_F(MatcherTest, TestPrefixMatcher) {
@@ -239,7 +239,7 @@ matcher_tree:
   auto match_tree = factory_.create(matcher);
 
   const MaybeMatchResult result = evaluateMatch(*match_tree(), TestData());
-  EXPECT_THAT(result, MaybeHasStringAction("expected!"));
+  EXPECT_THAT(result, HasResult(IsStringAction("expected!")));
 }
 
 TEST_F(MatcherTest, TestInvalidFloatPrefixMapMatcher) {
@@ -434,7 +434,7 @@ on_no_match:
   auto match_tree = factory_.create(matcher);
 
   MaybeMatchResult result = evaluateMatch(*match_tree(), TestData());
-  EXPECT_THAT(result, MaybeHasStringAction("expected!"));
+  EXPECT_THAT(result, HasResult(IsStringAction("expected!")));
 }
 
 TEST_F(MatcherTest, CustomGenericInput) {
@@ -466,7 +466,7 @@ matcher_list:
   auto match_tree = factory_.create(matcher);
 
   MaybeMatchResult result = evaluateMatch(*match_tree(), TestData());
-  EXPECT_THAT(result, MaybeHasStringAction("expected!"));
+  EXPECT_THAT(result, HasResult(IsStringAction("expected!")));
 }
 
 TEST_F(MatcherTest, CustomMatcher) {
@@ -509,7 +509,7 @@ matcher_list:
   auto match_tree = factory_.create(matcher);
 
   MaybeMatchResult result = evaluateMatch(*match_tree(), TestData());
-  EXPECT_THAT(result, MaybeHasStringAction("expected!"));
+  EXPECT_THAT(result, HasResult(IsStringAction("expected!")));
 }
 
 TEST_F(MatcherTest, TestAndMatcher) {
@@ -566,7 +566,7 @@ matcher_tree:
   auto match_tree = factory_.create(matcher);
 
   MaybeMatchResult result = evaluateMatch(*match_tree(), TestData());
-  EXPECT_THAT(result, MaybeHasStringAction("expected!"));
+  EXPECT_THAT(result, HasResult(IsStringAction("expected!")));
 }
 
 TEST_F(MatcherTest, TestOrMatcher) {
@@ -623,7 +623,7 @@ matcher_tree:
   auto match_tree = factory_.create(matcher);
 
   MaybeMatchResult result = evaluateMatch(*match_tree(), TestData());
-  EXPECT_THAT(result, MaybeHasStringAction("expected!"));
+  EXPECT_THAT(result, HasResult(IsStringAction("expected!")));
 }
 
 TEST_F(MatcherTest, TestNotMatcher) {
@@ -660,7 +660,7 @@ matcher_list:
   auto match_tree = factory_.create(matcher);
 
   MaybeMatchResult result = evaluateMatch(*match_tree(), TestData());
-  EXPECT_THAT(result, MaybeHasNoMatch());
+  EXPECT_THAT(result, HasNoMatchResult());
 }
 
 TEST_F(MatcherTest, TestRecursiveMatcher) {
@@ -714,7 +714,7 @@ matcher_list:
 
   // evaluateMatch() handles recursion internally to return a final action.
   const auto recursive_result = evaluateMatch(*match_tree(), TestData());
-  EXPECT_THAT(recursive_result, MaybeHasStringAction("expected!"));
+  EXPECT_THAT(recursive_result, HasResult(IsStringAction("expected!")));
 }
 
 TEST_F(MatcherTest, RecursiveMatcherNoMatch) {
@@ -724,7 +724,7 @@ TEST_F(MatcherTest, RecursiveMatcherNoMatch) {
                      stringOnMatch<TestData>("match"));
 
   const auto recursive_result = evaluateMatch(matcher, TestData());
-  EXPECT_THAT(recursive_result, MaybeHasNoMatch());
+  EXPECT_THAT(recursive_result, HasNoMatchResult());
 }
 
 TEST_F(MatcherTest, RecursiveMatcherCannotMatch) {
@@ -736,7 +736,7 @@ TEST_F(MatcherTest, RecursiveMatcherCannotMatch) {
                      stringOnMatch<TestData>("match"));
 
   const auto recursive_result = evaluateMatch(matcher, TestData());
-  EXPECT_THAT(recursive_result, MaybeFailedMatch());
+  EXPECT_THAT(recursive_result, HasFailureResult());
 }
 
 // Parameterized to test both xDS and Envoy Matcher APIs for new features.
@@ -896,40 +896,40 @@ TEST_P(MatcherAmbiguousTest, ReentryWithRecursiveMatcher) {
     skipped_results.push_back(match.action_cb_);
   };
   MaybeMatchResult result_1 = reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(result_1, MaybeHasStringAction("match-1"));
+  EXPECT_THAT(result_1, HasResult(IsStringAction("match-1")));
   EXPECT_THAT(skipped_results, IsEmpty());
   skipped_results.clear();
 
   MaybeMatchResult result_2 = reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(result_2, MaybeHasStringAction("match-2"));
+  EXPECT_THAT(result_2, HasResult(IsStringAction("match-2")));
   EXPECT_THAT(skipped_results, IsEmpty());
   skipped_results.clear();
 
   MaybeMatchResult on_no_match_result_1 =
       reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(on_no_match_result_1, MaybeHasStringAction("on-no-match-nested-1"));
+  EXPECT_THAT(on_no_match_result_1, HasResult(IsStringAction("on-no-match-nested-1")));
   EXPECT_THAT(skipped_results, IsEmpty());
   skipped_results.clear();
 
   MaybeMatchResult result_3 = reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(result_3, MaybeHasStringAction("match-3"));
+  EXPECT_THAT(result_3, HasResult(IsStringAction("match-3")));
   EXPECT_THAT(skipped_results, IsEmpty());
   skipped_results.clear();
 
   MaybeMatchResult result_4 = reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(result_4, MaybeHasStringAction("match-4"));
+  EXPECT_THAT(result_4, HasResult(IsStringAction("match-4")));
   EXPECT_THAT(skipped_results, IsEmpty());
   skipped_results.clear();
 
   MaybeMatchResult on_no_match_result_2 =
       reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(on_no_match_result_2, MaybeHasStringAction("on-no-match"));
+  EXPECT_THAT(on_no_match_result_2, HasResult(IsStringAction("on-no-match")));
   EXPECT_THAT(skipped_results, IsEmpty());
   skipped_results.clear();
 
   MaybeMatchResult no_remaining_reentrants_result =
       reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(no_remaining_reentrants_result, MaybeHasNoMatch());
+  EXPECT_THAT(no_remaining_reentrants_result, HasNoMatchResult());
   EXPECT_THAT(skipped_results, IsEmpty());
   skipped_results.clear();
 }
@@ -1097,25 +1097,25 @@ TEST_P(MatcherAmbiguousTest, ReentryWithNestedPreviewMatchers) {
     skipped_results.push_back(match.action_cb_);
   };
   MaybeMatchResult result_1 = reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(result_1, MaybeHasStringAction("match 3"));
+  EXPECT_THAT(result_1, HasResult(IsStringAction("match 3")));
   EXPECT_THAT(skipped_results, AreStringActions(std::vector<std::string>{
                                    "skipped - keep matching 1", "skipped - match 2"}));
   skipped_results.clear();
 
   // Expect only the keep_matching nested matcher to be skipped from the second parent.
   MaybeMatchResult result_2 = reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(result_2, MaybeHasStringAction("match 4"));
+  EXPECT_THAT(result_2, HasResult(IsStringAction("match 4")));
   EXPECT_THAT(skipped_results, AreStringActions(std::vector<std::string>{"keep matching 2"}));
   skipped_results.clear();
 
   MaybeMatchResult result_3 = reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(result_3, MaybeHasStringAction("on no match"));
+  EXPECT_THAT(result_3, HasResult(IsStringAction("on no match")));
   EXPECT_THAT(skipped_results, IsEmpty());
   skipped_results.clear();
 
   MaybeMatchResult no_remaining_reentrants_result =
       reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(no_remaining_reentrants_result, MaybeHasNoMatch());
+  EXPECT_THAT(no_remaining_reentrants_result, HasNoMatchResult());
   EXPECT_THAT(skipped_results, IsEmpty());
   skipped_results.clear();
 }
@@ -1165,7 +1165,7 @@ TEST_P(MatcherAmbiguousTest, KeepMatchingWithUnsupportedReentry) {
     skipped_results.push_back(match.action_cb_);
   };
   MaybeMatchResult result = reenterable_matcher.evaluateMatch(TestData(), skipped_match_cb);
-  EXPECT_THAT(result, MaybeHasNoMatch());
+  EXPECT_THAT(result, HasNoMatchResult());
   EXPECT_THAT(skipped_results, AreStringActions(std::vector<std::string>{"keep matching"}));
 }
 
